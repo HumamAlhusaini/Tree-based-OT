@@ -187,15 +187,15 @@ option_eqType =
 
 eqn :: Prelude.Integer -> Prelude.Integer -> Prelude.Bool
 eqn m n =
-  (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
+  (\fO fS x -> if x Prelude.== 0 then fO () else fS (x Prelude.- 1))
     ( \_ ->
-        (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
+        (\fO fS x -> if x Prelude.== 0 then fO () else fS (x Prelude.- 1))
           (Prelude.const Prelude.True)
           (Prelude.const Prelude.False)
           n
     )
     ( \m' ->
-        (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
+        (\fO fS x -> if x Prelude.== 0 then fO () else fS (x Prelude.- 1))
           (Prelude.const Prelude.False)
           (eqn m')
           n
@@ -421,7 +421,7 @@ rplc ::
   [] Sort ->
   Prelude.Maybe ([] Sort)
 rplc x n e xs =
-  (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
+  (\fO fS m -> if m Prelude.== 0 then fO () else fS (m Prelude.- 1))
     ( \_ ->
         case xs of
           [] -> Prelude.Nothing
