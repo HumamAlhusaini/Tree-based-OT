@@ -526,24 +526,31 @@ tree_eqType =
 data Jcmd c
   = JInsert Prelude.Integer ([] (Tree Sort)) -- Inserts subtrees es at position i in xs.
   | JRemove Prelude.Integer ([] (Tree Sort)) -- Removes subtrees es at position i in xs.
-  | JUnite Prelude.Integer Sort ([] (Tree Sort)) -- If es is empty, returns the tree unchanged.
-  | JFlat Prelude.Integer (Tree Sort)
-  | JOpenRoot Prelude.Integer (Jcmd c)
-  | JEditLabel c
+  | JUnite Prelude.Integer Sort ([] (Tree Sort)) -- Unite node at index with subtrees
+  | JFlat Prelude.Integer (Tree Sort) -- Flatten tree at index
+  | JOpenRoot Prelude.Integer (Jcmd c) -- Apply command to root of subtree at index
+  | JEditLabel c -- Modify label of root node
 
 jinterp ::
   Type ->
-  OTBase Sort a1 ->
-  Jcmd a1 ->
-  Tree Sort ->
-  Prelude.Maybe (Tree Sort)
+  OTBase Sort a1 -> -- A base OT function for editing Sort labels.
+  Jcmd a1 -> -- The command to apply.
+  Tree Sort -> -- The tree being modified.
+  Prelude.Maybe (Tree Sort) -- If modification succeeds, returns Prelude.Just, else prelude.Nothing
 jinterp x otX cmd m =
   case m of
     Node x0 xs ->
+      -- Matches the root node Node x0 xs, where: x0: Label of the root. xs: List of child subtrees.
       case cmd of
-        JInsert i es -> nodeW x0 (unsafeCoerce ins (tree_eqType x) i es xs)
-        JRemove i es -> nodeW x0 (unsafeCoerce rm (tree_eqType x) i es xs)
+        JInsert i es -> nodeW x0 (unsafeCoerce ins (tree_eqType x) i es xs) -- Inserts subtrees es at position i in xs.
+        JRemove i es -> nodeW x0 (unsafeCoerce rm (tree_eqType x) i es xs) -- JRemove i es -> nodeW x0 (unsafeCoerce rm (tree_eqType x) i es xs)
         JUnite i y es ->
+          {-
+              If es is empty, returns the tree unchanged.
+              Otherwise:
+                Removes es from index i (rm).
+                Inserts a new node (Node y es) at index i (ins).
+          -}
           case es of
             [] -> Prelude.Just (Node x0 xs)
             (:) _ _ ->
@@ -560,6 +567,14 @@ jinterp x otX cmd m =
                     )
                 Prelude.Nothing -> Prelude.Nothing
         JFlat i t ->
+          {-
+            Flattens a tree node at index i, but only if:
+
+            The subtrees zs match the subtrees ys.
+            The labels x, y, z are equal (eq_op x y z).
+
+            If both conditions hold, it removes the node and inserts its children at index i.
+          -}
           case t of
             Node z zs ->
               case nth (tree_eqType x) i (unsafeCoerce xs) of
@@ -591,6 +606,7 @@ jinterp x otX cmd m =
                         Prelude.False -> Prelude.Nothing
                 Prelude.Nothing -> Prelude.Nothing
         JOpenRoot i cmd' ->
+          -- Finds the subtree at index i and applies cmd' to its root.
           case nth (tree_eqType x) i (unsafeCoerce xs) of
             Prelude.Just x' ->
               nodeW
@@ -604,6 +620,10 @@ jinterp x otX cmd m =
                 )
             Prelude.Nothing -> Prelude.Nothing
         JEditLabel cmd0 ->
+          {-
+              Modifies the root node’s label (x0) using interp otX cmd0 x0.
+              If successful, updates x0 in the tree.
+          -}
           case interp otX cmd0 x0 of
             Prelude.Just x' -> Prelude.Just (Node x' xs)
             Prelude.Nothing -> Prelude.Nothing
