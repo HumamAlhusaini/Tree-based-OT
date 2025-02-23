@@ -12,7 +12,6 @@ import qualified Prelude
 import qualified GHC.Base
 import qualified Unsafe.Coerce as GHC.Base
 #else
--- HUGS
 import qualified IOExts
 #endif
 
@@ -308,7 +307,7 @@ eqseqP t _top_assumption_ =
                       (:) x x0 -> _evar_0_1 x x0
        in list_rect _evar_0_ _evar_0_0 _top_assumption_
 
-seq_eqMixin :: Type -> Mixin_of (([]) Sort)
+seq_eqMixin :: Type -> Mixin_of ([] Sort)
 seq_eqMixin t =
   Mixin (eqseq t) (eqseqP t)
 
@@ -521,13 +520,13 @@ tree_eqMixin t =
     (unsafeCoerce decode)
 
 tree_eqType :: Type -> Type
-tree_eqType t =
-  unsafeCoerce tree_eqMixin t
+tree_eqType =
+  unsafeCoerce tree_eqMixin
 
 data Jcmd c
-  = JInsert Prelude.Integer ([] (Tree Sort))
-  | JRemove Prelude.Integer ([] (Tree Sort))
-  | JUnite Prelude.Integer Sort ([] (Tree Sort))
+  = JInsert Prelude.Integer ([] (Tree Sort)) -- Inserts subtrees es at position i in xs.
+  | JRemove Prelude.Integer ([] (Tree Sort)) -- Removes subtrees es at position i in xs.
+  | JUnite Prelude.Integer Sort ([] (Tree Sort)) -- If es is empty, returns the tree unchanged.
   | JFlat Prelude.Integer (Tree Sort)
   | JOpenRoot Prelude.Integer (Jcmd c)
   | JEditLabel c

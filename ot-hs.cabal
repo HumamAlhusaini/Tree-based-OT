@@ -58,7 +58,7 @@ library
     import:           warnings
 
     -- Modules exported by the library.
-    exposed-modules:  MyLib Commons ArithAux ListTools OtDef TreeOT Tree RichText SortedTree
+    exposed-modules:  TreeOT Tree RichText 
 
     -- Modules included in this library but not exported.
     -- other-modules:
