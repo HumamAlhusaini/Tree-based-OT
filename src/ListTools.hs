@@ -42,7 +42,7 @@ type Pred t = t -> Prelude.Bool
 
 type Rel t = t -> Pred t
 
-data Mem_pred t
+newtype Mem_pred t
   = Mem (Pred t)
 
 data PredType0 t
@@ -77,7 +77,7 @@ type Axiom t = t -> t -> Reflect
 data Mixin_of t
   = Mixin (Rel t) (Axiom t)
 
-op :: (Mixin_of a1) -> Rel a1
+op :: Mixin_of a1 -> Rel a1
 op m =
   case m of
     Mixin op0 _ -> op0
@@ -111,14 +111,14 @@ filter a s =
         Prelude.True -> (:) x (filter a s')
         Prelude.False -> filter a s'
 
-mem_seq :: Type -> (([]) Sort) -> Sort -> Prelude.Bool
+mem_seq :: Type -> [] Sort -> Sort -> Prelude.Bool
 mem_seq t s =
   case s of
-    ([]) -> (\_ -> Prelude.False)
+    [] -> (\_ -> Prelude.False)
     (:) y s' ->
       let p = mem_seq t s' in (\x -> (Prelude.||) (eq_op t x y) (p x))
 
-type Seq_eqclass = ([]) Sort
+type Seq_eqclass = [] Sort
 
 pred_of_seq :: Type -> Seq_eqclass -> Pred_sort Sort
 pred_of_seq t s =
@@ -137,18 +137,18 @@ bind f x =
 weak_cons ::
   Type ->
   Sort ->
-  (Prelude.Maybe (([]) Sort)) ->
+  Prelude.Maybe ([] Sort) ->
   Prelude.Maybe
-    (([]) Sort)
+    ([] Sort)
 -- this implements currying
 weak_cons _ x =
   bind (\xs -> Prelude.Just ((:) x xs))
 
 weak_app ::
   Type ->
-  (([]) Sort) ->
-  (Prelude.Maybe (([]) Sort)) ->
-  Prelude.Maybe (([]) Sort)
+  [] Sort ->
+  Prelude.Maybe ([] Sort) ->
+  Prelude.Maybe ([] Sort)
 weak_app _ xs ys =
   case ys of
     Prelude.Just ys0 -> Prelude.Just (cat xs ys0)
@@ -157,16 +157,16 @@ weak_app _ xs ys =
 ins ::
   Type ->
   Prelude.Integer ->
-  (([]) Sort) ->
-  (([]) Sort) ->
+  [] Sort ->
+  [] Sort ->
   Prelude.Maybe
-    (([]) Sort)
+    ([] Sort)
 ins x i es xs =
   (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
     (\_ -> Prelude.Just (cat es xs))
     ( \i' ->
         case xs of
-          ([]) -> Prelude.Nothing
+          [] -> Prelude.Nothing
           (:) x' xs' -> weak_cons x x' (ins x i' es xs')
     )
     i
@@ -174,27 +174,27 @@ ins x i es xs =
 oins ::
   Type ->
   Prelude.Integer ->
-  (([]) Sort) ->
-  (Prelude.Maybe (([]) Sort)) ->
-  Prelude.Maybe (([]) Sort)
+  [] Sort ->
+  Prelude.Maybe ([] Sort) ->
+  Prelude.Maybe ([] Sort)
 oins x i es =
   bind (ins x i es)
 
 rm ::
   Type ->
   Prelude.Integer ->
-  (([]) Sort) ->
-  (([]) Sort) ->
+  [] Sort ->
+  [] Sort ->
   Prelude.Maybe
-    (([]) Sort)
+    ([] Sort)
 rm x i es xs =
   case xs of
-    ([]) -> case es of
-      ([]) -> Prelude.Just xs
+    [] -> case es of
+      [] -> Prelude.Just xs
       (:) _ _ -> Prelude.Nothing
     (:) x' xs' ->
       case es of
-        ([]) -> Prelude.Just xs
+        [] -> Prelude.Just xs
         (:) e' es' ->
           (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
             ( \_ ->
@@ -208,28 +208,28 @@ rm x i es xs =
 orm ::
   Type ->
   Prelude.Integer ->
-  (([]) Sort) ->
-  (Prelude.Maybe (([]) Sort)) ->
-  Prelude.Maybe (([]) Sort)
+  [] Sort ->
+  Prelude.Maybe ([] Sort) ->
+  Prelude.Maybe ([] Sort)
 orm x index elements =
   bind (rm x index elements)
 
 rplc ::
   Type ->
   Prelude.Integer ->
-  (Prelude.Maybe Sort) ->
-  (([]) Sort) ->
-  Prelude.Maybe (([]) Sort)
+  Prelude.Maybe Sort ->
+  [] Sort ->
+  Prelude.Maybe ([] Sort)
 rplc x n e xs =
   (\fO fS n -> if n Prelude.== 0 then fO () else fS (n Prelude.- 1))
     ( \_ ->
         case xs of
-          ([]) -> Prelude.Nothing
+          [] -> Prelude.Nothing
           (:) _ xs' -> bind (\e' -> Prelude.Just ((:) e' xs')) e
     )
     ( \n' ->
         case xs of
-          ([]) -> Prelude.Nothing
+          [] -> Prelude.Nothing
           (:) x0 xs' -> weak_cons x x0 (rplc x n' e xs')
     )
     n
@@ -237,15 +237,14 @@ rplc x n e xs =
 orplc ::
   Type ->
   Prelude.Integer ->
-  (Prelude.Maybe Sort) ->
-  ( Prelude.Maybe
-      (([]) Sort)
-  ) ->
-  Prelude.Maybe (([]) Sort)
+  Prelude.Maybe Sort ->
+  Prelude.Maybe
+    ([] Sort) ->
+  Prelude.Maybe ([] Sort)
 orplc x index e =
   bind (rplc x index e)
 
-seqminus :: Type -> (([]) Sort) -> (([]) Sort) -> ([]) Sort
+seqminus :: Type -> [] Sort -> [] Sort -> [] Sort
 seqminus x x0 y =
   filter
     ( \z ->
